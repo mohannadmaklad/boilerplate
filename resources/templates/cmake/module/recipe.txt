@@ -1,0 +1,17 @@
+# Create the target directory named with the first parameter
+TARGET_DIR $1
+
+# Copy the following files
+FILE bp_module.cpp
+FILE bp_module.hpp
+FILE CMakeLists.txt
+
+# Replace bp_module in any of the previous files to the first argument passed
+RENAME bp_module.hpp $1.hpp
+RENAME bp_module.cpp $1.cpp
+
+# Replace "bp_module" in any of the previous files contents to the first argument passed
+REPLACE $1.hpp bp_module $1
+REPLACE $1.cpp bp_module $1
+REPLACE CMakeLists.txt bp_module $1
+test cc afd
