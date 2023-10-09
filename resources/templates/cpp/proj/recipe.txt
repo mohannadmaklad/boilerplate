@@ -1,0 +1,6 @@
+# Create the target directory named with the first parameter
+TARGET_DIR $1
+
+# Copy all the files
+FILE main.cpp
+FILE CMakeLists.txt

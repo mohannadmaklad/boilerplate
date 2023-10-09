@@ -25,3 +25,13 @@ boilerplate <CAT> <CMD> <OPT>
 - CMD: Specific command under the category.
 - OPT: Additional optional arguments specific to the command.
 
+## Build and Installation
+
+Inside the project root folder:
+
+```sh
+cmake -S . -B ./build
+cmake --build ./build
+sudo cmake --install ./install
+```
+

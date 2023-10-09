@@ -5,6 +5,7 @@
 #include <fstream>
 #include <streambuf>
 #include <algorithm>
+#include <string_view>
 
 // 3rd party
 #include <fplus/fplus.hpp>
@@ -54,7 +55,7 @@ void printHelp()
     std::cout << "the tool will look for the file cmake/module/recipe.txt under the root path to execute the recipe commands.\n";
 }
 
-std::string evaluate_exp(std::string exp, std::string opt_arg1)
+std::string evaluate_exp(const std::string &exp, const std::string &opt_arg1)
 {
     /*
     * Assumptions:
@@ -65,13 +66,13 @@ std::string evaluate_exp(std::string exp, std::string opt_arg1)
     return fplus::replace_tokens({"$1"}, opt_arg1, exp);
 }
 
-void execute_recipe_file_cmd(fs::path root, std::string from)
+void execute_recipe_file_cmd(const fs::path &root, const std::string &from)
 {
     const auto dest = "." / target_dir;
     fs::copy(root / from, dest, fs::copy_options::update_existing);
 }
 
-void execute_recipe_dir_cmd(fs::path root, std::string dir_name, std::string opt_arg1)
+void execute_recipe_dir_cmd(const fs::path &root, const std::string &dir_name, const std::string &opt_arg1)
 {
     const auto cur_path = fs::current_path();
     target_dir = evaluate_exp(dir_name, opt_arg1);
@@ -81,7 +82,7 @@ void execute_recipe_dir_cmd(fs::path root, std::string dir_name, std::string opt
     fs::create_directory(target_dir);
 }
 
-void execute_recipe_rename_cmd(std::string old_name, std::string new_name, std::string opt_arg1)
+void execute_recipe_rename_cmd(const std::string &old_name, const std::string &new_name, const std::string &opt_arg1)
 {
     fs::rename("." / target_dir / old_name, "." / target_dir / evaluate_exp(new_name, opt_arg1));
 }
@@ -91,6 +92,7 @@ void execute_recipe_replace_cmd(std::string file, std::string old_token, std::st
     file = evaluate_exp(file, opt_arg1);
     old_token = evaluate_exp(old_token, opt_arg1);
     new_token = evaluate_exp(new_token, opt_arg1);
+
     // read file contents
     std::string cmake_file_contents;
     {
@@ -111,7 +113,7 @@ void execute_recipe_replace_cmd(std::string file, std::string old_token, std::st
     }
 }
 
-void execute_line(fs::path root, std::string cmd, std::string opt_arg1)
+void execute_line(const fs::path &root, const std::string &cmd, const std::string &opt_arg1)
 {
     const auto full_command = fplus::split(' ', false, cmd);
     const auto command = to_bp_command(full_command[0]);
@@ -150,8 +152,6 @@ int main(const int argc, char **argv)
     if (std::string{argv[1]} == std::string{"-h"} || std::string{argv[1]} == std::string{"--help"})
     {
         printHelp();
-        std::cout
-            << "Invalid arguement number, please try -h or --help for help";
         return 0;
     }
 
@@ -161,11 +161,13 @@ int main(const int argc, char **argv)
         return 0;
     }
 
-    const std::string language{argv[1]};
+    const std::string category{argv[1]};
     const std::string action{argv[2]};
-    const std::string opt_arg{argv[3]};
+    std::string opt_arg;
+    if (argc > 2)
+        opt_arg = argv[3];
 
-    std::cout << "language " << language << "\n";
+    std::cout << "category " << category << "\n";
     std::cout << "action " << action << "\n";
 
     // go to the action folder
@@ -183,7 +185,8 @@ int main(const int argc, char **argv)
         return 0;
     }
 
-    const fs::path action_path = tmplates_srcs / language / action;
+    const fs::path action_path = tmplates_srcs / category / action;
+    std::cout << "Working from path: " << action_path << "\n";
     const auto destination = fs::current_path();
 
     if (!fs::exists(action_path))
@@ -194,6 +197,11 @@ int main(const int argc, char **argv)
 
     // read the recipe
     std::ifstream recipe = std::ifstream(action_path / "recipe.txt");
+    if (!recipe.is_open())
+    {
+        std::cerr << "Couldn't find a valid recipe file in the relative path: " << action_path / "recipe.txt";
+        return (0);
+    }
     std::string line;
 
     while (std::getline(recipe, line))
