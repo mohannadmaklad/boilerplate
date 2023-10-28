@@ -155,6 +155,9 @@ int main(const int argc, char **argv)
         return 0;
     }
 
+    std::cout << "Boilerplate version "
+              << BP_VERSION << std::endl;
+
     if (std::string{argv[1]} == std::string{"--print-root"})
     {
         std::cout << "Current root path is: " << root_path << "\n";
@@ -163,12 +166,19 @@ int main(const int argc, char **argv)
 
     const std::string category{argv[1]};
     const std::string action{argv[2]};
-    std::string opt_arg;
-    if (argc > 2)
-        opt_arg = argv[3];
-
     std::cout << "category " << category << "\n";
     std::cout << "action " << action << "\n";
+
+    std::string opt_arg;
+    if (argc > 3)
+    {
+        opt_arg = argv[3];
+    }
+    else
+    {
+        std::cout << "No optional parameter passed, boilerplate will use the action name if needed\n";
+        opt_arg = action;
+    }
 
     // go to the action folder
     const auto tmplates_srcs = fs::path(root_path);
